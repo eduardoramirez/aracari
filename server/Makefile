@@ -3,8 +3,11 @@ CFLAGS  = -g -Wall
 
 default: httpd
 
-httpd:	server.o
-	$(CC) $(CFLAGS) -o httpd server.o
+httpd:	main.o server.o
+	$(CC) $(CFLAGS) -o httpd main.o server.o
+
+main.o:	main.cpp
+	$(CC) $(CFLAGS) -c main.cpp
 
 server.o:	server.cpp server.h
 	$(CC) $(CFLAGS) -c server.cpp
