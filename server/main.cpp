@@ -1,5 +1,20 @@
 #include "server.h"
 
+
+bool is_file(char * path) {
+    struct stat buf;
+    stat(path, &buf);
+    return S_ISREG(buf.st_mode);
+}
+
+bool is_dir(char * path) {
+    struct stat buf;
+    stat(path, &buf);
+    return S_ISDIR(buf.st_mode);
+}
+
+
+
 void cleanUp(int sig) {
   fprintf(stderr, "\nCleaning Up\n");
   exit(sig);
@@ -8,6 +23,8 @@ void cleanUp(int sig) {
 void usage() {
     fprintf(stderr, "USAGE: ./httpd <port> <document root>\n");
 }
+
+
 
 int main(int argc, char * argv[]) {
   if(argc != 3) {
@@ -20,7 +37,12 @@ int main(int argc, char * argv[]) {
 
   int port = atoi(argv[1]);
 
-  string docroot(argv[2]);
+  if(!is_dir(argv[2])) {
+    fprintf(stderr, "%s is not a directory\n", argv[2]);
+    exit(1);
+  }
+
+  string docroot(realpath(argv[2], NULL));
 
   Server * server = new Server(port, docroot);
 
@@ -28,6 +50,8 @@ int main(int argc, char * argv[]) {
     fprintf(stderr, "Exiting now\n");
     exit(1); 
   }
+  
+  //fprintf(stderr, "docroot: %s\n", docroot.c_str());
 
   int sock = server->getSock();
 

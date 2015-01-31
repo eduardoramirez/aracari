@@ -32,6 +32,14 @@ int Server::getSock() {
   return sock;
 }
 
+int Server::getPort() {
+  return port;
+}
+
+string Server::getDocroot() {
+  return docroot;
+}
+
 int Server::processRequest(int csock) {
   char buf[BUFSIZ];
   ssize_t bytes_read;

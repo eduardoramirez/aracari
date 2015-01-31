@@ -3,6 +3,8 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+
 #include <netinet/in.h>
 
 #include <stdlib.h>
@@ -11,6 +13,8 @@
 #include <unistd.h>
 
 #include <string>
+
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -30,8 +34,12 @@ class Server {
     int initialize();
 
     int getSock();
+    int getPort();
+
+    string getDocroot();
     
     int processRequest(int csock);
+
 };
 
 
