@@ -12,8 +12,12 @@ class Server {
 
     string docroot;
 
+    bool checkCRLF(char * arr);
 
-    int checkLast3(char * end, char * start);
+    void copyLast3(char * arr, char * buf1, int buf1len, char * buf2, int buf2len);
+    void resetLast3(char * arr);
+
+    int checkLast3(char * end, char * start, ssize_t bytes_read);
 
   public:
     Server(int port, string docroot);

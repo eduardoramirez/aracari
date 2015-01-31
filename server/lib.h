@@ -18,7 +18,6 @@
 
 using namespace std;
 
-
 bool is_file(char * path);
 bool is_dir(char * path);
 
