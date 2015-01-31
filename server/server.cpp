@@ -40,7 +40,34 @@ string Server::getDocroot() {
   return docroot;
 }
 
-int Server::processRequest(int csock) {
+void Server::processRequest(int csock) {
+  
+  while(true) {
+    string request = "";
+    string extra = "";
+    
+    char buf[BUFSIZ];
+
+    char last3[3];
+
+    while(true) {
+      ssize_t bytes_read = recv(csock, &buf, sizeof(buf) - 1, 0);
+
+      if(bytes_read <= 0) {
+        continue;
+      }
+
+      for(int i = 0; i < bytes_read - 3; i++) {
+
+      }
+    }
+  }
+
+  close(csock);
+  exit(0);
+
+
+  /*
   char buf[BUFSIZ];
   ssize_t bytes_read;
 
@@ -66,4 +93,10 @@ int Server::processRequest(int csock) {
   exit(0);
 
   return 0;
+  */
+}
+
+
+
+int Server::checkLast3(char * end, char * start) {
 }

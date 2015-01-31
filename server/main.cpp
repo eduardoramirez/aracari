@@ -14,7 +14,6 @@ bool is_dir(char * path) {
 }
 
 
-
 void cleanUp(int sig) {
   fprintf(stderr, "\nCleaning Up\n");
   exit(sig);

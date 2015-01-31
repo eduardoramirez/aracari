@@ -27,6 +27,9 @@ class Server {
 
     string docroot;
 
+
+    int checkLast3(char * end, char * start);
+
   public:
     Server(int port, string docroot);
     ~Server();
@@ -38,7 +41,7 @@ class Server {
 
     string getDocroot();
     
-    int processRequest(int csock);
+    void processRequest(int csock);
 
 };
 
