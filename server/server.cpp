@@ -1,4 +1,5 @@
 #include "server.h"
+#include "http.h"
 
 Server::Server(int port, string docroot) {
   this->port = port;
@@ -41,7 +42,7 @@ string Server::getDocroot() {
 }
 
 void Server::processRequest(int csock) {
-  
+ /* 
   while(true) {
     string request = "";
     string extra = "";
@@ -65,9 +66,9 @@ void Server::processRequest(int csock) {
 
   close(csock);
   exit(0);
+*/
 
-
-  /*
+  
   char buf[BUFSIZ];
   ssize_t bytes_read;
 
@@ -91,12 +92,10 @@ void Server::processRequest(int csock) {
 
   close(csock);
   exit(0);
-
-  return 0;
-  */
 }
 
 
 
 int Server::checkLast3(char * end, char * start) {
+  return 0;
 }
