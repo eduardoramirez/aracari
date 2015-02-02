@@ -31,16 +31,16 @@ int main(int argc, char * argv[]) {
 
   string docroot(realpath(argv[2], NULL));
 
-  Server * server = new Server(port, docroot);
+  Server server(port, docroot);
 
-  if(server->initialize() != 0) {
+  if(server.initialize() != 0) {
     fprintf(stderr, "Exiting now\n");
     exit(1); 
   }
   
   //fprintf(stderr, "docroot: %s\n", docroot.c_str());
 
-  int sock = server->getSock();
+  int sock = server.getSock();
 
   while(true) {
     struct sockaddr_in client_address = {0};
@@ -55,7 +55,7 @@ int main(int argc, char * argv[]) {
     }
 
     if(fork() == 0) {
-      server->processRequest(csock);
+      server.processRequest(csock);
     }
   }
 

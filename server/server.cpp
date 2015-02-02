@@ -66,6 +66,11 @@ void Server::processRequest(int csock) {
       if((lastIndex = checkLast3(last3, buf, bytes_read)) >= 0) {
         string remaining(buf, lastIndex+1);
         HttpRequest httpRequest(request, this);
+        httpRequest.parseRequest();
+        httpRequest.generateResponse(csock);
+        request = "";
+        resetLast3(last3);
+        continue;
       }
 
       for(int i = 0; i < bytes_read - 3; i++) {
@@ -74,11 +79,14 @@ void Server::processRequest(int csock) {
           request = request + remaining;
 
           HttpRequest httpRequest(request, this);
+          httpRequest.parseRequest();
+          httpRequest.generateResponse(csock);
+
         }
       }
 
       resetLast3(last3);
-      copyLast3(last3, (char *) request.c_str(), request.length(), buf, bytes_read);
+      copyLast3(last3,(char *)request.c_str(),request.length(),buf,bytes_read);
 
       string remaining(buf, bytes_read);
       request = request + remaining;
