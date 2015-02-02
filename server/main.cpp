@@ -29,7 +29,9 @@ int main(int argc, char * argv[]) {
     exit(1);
   }
 
-  string docroot(realpath(argv[2], NULL));
+  char buf[BUFSIZ];
+  realpath(argv[2],buf);
+  string docroot(buf);
 
   Server server(port, docroot);
 

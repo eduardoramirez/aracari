@@ -16,6 +16,9 @@
 
 #include <sys/stat.h>
 
+#include <iostream>
+#include <csignal>
+
 using namespace std;
 
 bool is_file(char * path);
