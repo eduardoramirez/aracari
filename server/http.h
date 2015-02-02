@@ -28,9 +28,13 @@ class HttpRequest {
 
     bool parsePath(char * arr, int length);
 
-    string badRequest();
+    string request200();
+    string request400();
+    string request403();
     string request404();
-    string goodRequest();
+
+    bool checkHttp(char * arr);
+    bool checkGet(char * arr);
 
   public:
     HttpRequest(string request, Server * server);
@@ -39,6 +43,8 @@ class HttpRequest {
     void parseRequest();
 
     void generateResponse(int csock);
+
+    bool isPersistent();
 };
 
 #endif

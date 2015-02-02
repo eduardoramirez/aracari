@@ -57,8 +57,12 @@ void Server::processRequest(int csock) {
     while(true) {
       ssize_t bytes_read = recv(csock, &buf, sizeof(buf) - 1, 0);
 
-      if(bytes_read <= 0) {
+      if(bytes_read < 0) {
         continue;
+      }
+
+      if(bytes_read == 0) {
+        // TODO Deal with closing connection
       }
 
       int lastIndex;
@@ -70,7 +74,8 @@ void Server::processRequest(int csock) {
         httpRequest.generateResponse(csock);
         request = "";
         resetLast3(last3);
-        continue;
+        close(csock);
+        exit(0);
       }
 
       for(int i = 0; i < bytes_read - 3; i++) {
@@ -81,6 +86,8 @@ void Server::processRequest(int csock) {
           HttpRequest httpRequest(request, this);
           httpRequest.parseRequest();
           httpRequest.generateResponse(csock);
+          close(csock);
+          exit(0);
 
         }
       }

@@ -37,16 +37,11 @@ void HttpRequest::parseRequest() {
 
   tokenLength = getTokenLength(travel);
 
-  if(tokenLength != 3) {
+  if(tokenLength != 3 || !checkGet(travel)) {
     isMalformed = true;
     return;
   }
   
-  if(travel[0] != 'G' || travel[1] != 'E' || travel[2] != 'T') {
-    isMalformed = true;
-    return;
-  }
-
   travel = travel + tokenLength;
   travel = skipTrim(travel);
 
@@ -58,18 +53,40 @@ void HttpRequest::parseRequest() {
   tokenLength = getTokenLength(travel);
 
   if(!parsePath(travel, tokenLength)) {
+    // TODO Deal with this shit
+  }
+
+  travel = travel + tokenLength;
+  travel = skipTrim(travel);
+  
+  tokenLength = getTokenLength(travel);
+
+  if(tokenLength != 8 || !checkHttp(travel)) {
+    isMalformed = true;
     return;
   }
-  
+
 }
 
 
 void HttpRequest::generateResponse(int csock) {
 
   if(isMalformed) {
-    send(csock, badRequest().c_str(), badRequest().length(), 0);
+    send(csock, request400().c_str(), request400().length(), 0);
     return;
   }
+
+  if(accessDenied) {
+    send(csock, request403().c_str(), request403().length(), 0);
+    return;
+  }
+
+  if(notFound) {
+    send(csock, request404().c_str(), request404().length(), 0);
+    return;
+  }
+
+  send(csock, request200().c_str(), request200().length(),0);
 }
 
 
@@ -84,7 +101,10 @@ char * HttpRequest::skipTrim(char * arr) {
 int HttpRequest::getTokenLength(char * arr) {
   char * travel = arr;
 
-  while(*travel != ' ' && *travel != '\t' && *travel != '\r') {
+  while(*travel != ' ' &&
+        *travel != '\t' &&
+        *travel != '\r' &&
+        *travel != '\n') {
     travel++;
   }
 
@@ -92,16 +112,30 @@ int HttpRequest::getTokenLength(char * arr) {
 }
 
 bool HttpRequest::parsePath(char * arr, int length) {
-  
-
   return false;
 }
 
-string HttpRequest::badRequest() {
+string HttpRequest::request200() {
+  string ret = "HTTP/1.1 200 Good Request\r\n";
+  ret += "Content-Type: text/html\r\n";
+  ret += "Content-Length: 14\r\n\r\n";
+  ret += "Good Request!\n";
+  return ret;
+}
+
+string HttpRequest::request400() {
   string ret = "HTTP/1.1 400 Bad Request\r\n";
   ret += "Content-Type: text/html\r\n";
   ret += "Content-Length: 13\r\n\r\n";
   ret += "Bad Request!\n";
+  return ret;
+}
+
+string HttpRequest::request403() {
+  string ret = "HTTP/1.1 403 Forbidden\r\n";
+  ret += "Content-Type: text/html\r\n";
+  ret += "Content-Length: 11\r\n\r\n";
+  ret += "Forbidden!\n";
   return ret;
 }
 
@@ -113,7 +147,38 @@ string HttpRequest::request404() {
   return ret;
 }
 
-string HttpRequest::goodRequest() {
-  string ret = "HTTP/1.1 200 Good Request\r\n";
-  return ret;
+bool HttpRequest::isPersistent() {
+  return persistent;
+}
+
+bool HttpRequest::checkHttp(char * arr) {
+  if (!(arr[0] == 'H' || arr[0] == 'h') &&
+      (arr[1] == 'T' || arr[1] == 't') &&
+      (arr[2] == 'T' || arr[2] == 't') &&
+      (arr[3] == 'p' || arr[3] == 'p') &&
+      (arr[4] == '/') &&
+      (arr[5] == '1') &&
+      (arr[6] == '.') &&
+      (arr[7] == '1' || arr[3] == '1')) {
+    return false;
+  }
+
+  if(arr[7] == '1') {
+    persistent = true;
+  }
+  else {
+    persistent = false;
+  }
+
+  return true;
+}
+
+bool HttpRequest::checkGet(char * arr) {
+  if(!(arr[0] == 'G' || arr[0] == 'g') &&
+     (arr[1] == 'E' || arr[1] == 'e') &&
+     (arr[2] == 'T' || arr[2] == 't')) {
+    isMalformed = true;
+    return false;
+  }
+  return true;
 }
