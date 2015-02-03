@@ -16,3 +16,13 @@ bool is_dir(char * path) {
     return S_ISDIR(buf.st_mode);
 }
 
+void shut(int csock, int ssock) {
+  close(csock);
+  close(ssock);
+  exit(0);
+}
+
+void shut(int sock) {
+  close(sock);
+  exit(0);
+}

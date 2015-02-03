@@ -39,6 +39,8 @@ int main(int argc, char * argv[]) {
     fprintf(stderr, "Exiting now\n");
     exit(1); 
   }
+
+  // fprintf(stderr, "Server is now accepting connections on port %d\n", port);
   
   //fprintf(stderr, "docroot: %s\n", docroot.c_str());
 

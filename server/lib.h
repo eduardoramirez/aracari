@@ -25,4 +25,7 @@ using namespace std;
 bool is_file(char * path);
 bool is_dir(char * path);
 
+void shut(int csock, int ssock);
+void shut(int sock);
+
 #endif

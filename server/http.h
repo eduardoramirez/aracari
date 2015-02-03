@@ -26,8 +26,10 @@ class HttpRequest {
     char * skipTrim(char * arr);
     char * skipTillCRLF(char * arr);
     char * skipTillColon(char * arr);
+    char * skipSlash(char * arr);
 
     int getTokenLength(char * arr);
+    int getPathTokenLength(char * arr);
 
     bool parsePath(char * arr, int length);
 
@@ -38,6 +40,10 @@ class HttpRequest {
 
     bool checkHttp(char * arr);
     bool checkGet(char * arr);
+
+    void addIndex(char * arr);
+
+    void setContentType(string str);
 
   public:
     HttpRequest(string request, int csock, Server * server);

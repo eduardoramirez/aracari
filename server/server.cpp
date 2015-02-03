@@ -78,8 +78,6 @@ void Server::processRequest(int csock) {
       }
     }
 
-    fprintf(stderr, "We got here\n");
-
     string request = extra;
     extra = "";
     breaker = false;
@@ -110,8 +108,7 @@ void Server::processRequest(int csock) {
     else if(retval) {
     }
     else {
-      close(csock);
-      exit(1);
+      shut(csock, sock);
     }
 
     while(true) {
@@ -123,8 +120,7 @@ void Server::processRequest(int csock) {
       }
 
       if(bytes_read == 0) {
-        close(csock);
-        exit(0);
+        shut(csock, sock);
       }
 
       int lastIndex;
@@ -184,8 +180,7 @@ void Server::processRequest(int csock) {
     }
   }
 
-  close(csock);
-  exit(0);
+  shut(csock, sock);
 
 
   /*
