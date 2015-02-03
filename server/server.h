@@ -14,6 +14,7 @@ class Server {
 
     bool checkCRLF(char * arr);
 
+    void copyLast3(char * arr, char * buf, int length);
     void copyLast3(char * arr,char * buf1,int buf1len,char * buf2,int buf2len);
     void resetLast3(char * arr);
 

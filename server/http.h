@@ -7,28 +7,31 @@ class HttpRequest {
   private:
     string request;
     string response;
-
     string docroot;
-
     string path;
+    string contentType;
+    string httpType;
 
     bool beenParsed;
     bool isMalformed;
     bool accessDenied;
     bool notFound;
     bool responseGenerated;
-
     bool persistent;
+
+    int csock;
 
     Server * server;
 
     char * skipTrim(char * arr);
+    char * skipTillCRLF(char * arr);
+    char * skipTillColon(char * arr);
 
     int getTokenLength(char * arr);
 
     bool parsePath(char * arr, int length);
 
-    string request200();
+    void request200();
     string request400();
     string request403();
     string request404();
@@ -37,12 +40,12 @@ class HttpRequest {
     bool checkGet(char * arr);
 
   public:
-    HttpRequest(string request, Server * server);
+    HttpRequest(string request, int csock, Server * server);
     ~HttpRequest();
 
     void parseRequest();
 
-    void generateResponse(int csock);
+    void generateResponse();
 
     bool isPersistent();
 };

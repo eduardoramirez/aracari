@@ -1,6 +1,6 @@
 #include "http.h"
 
-HttpRequest::HttpRequest(string request, Server * server) {
+HttpRequest::HttpRequest(string request, int csock, Server * server) {
   fprintf(stderr, "Request received. Printing it out.\n");
   fprintf(stderr, "%s\n", request.c_str());
 
@@ -10,16 +10,18 @@ HttpRequest::HttpRequest(string request, Server * server) {
   this->docroot = server->getDocroot();
 
   response = "";
-
   path = "";
+  contentType = "";
+  httpType = "";
 
   beenParsed = false;
   isMalformed = false;
   accessDenied = false;
   notFound = false;
   responseGenerated = false;
-
   persistent = false;
+
+  this->csock = csock;
 }
 
 HttpRequest::~HttpRequest() {
@@ -66,27 +68,67 @@ void HttpRequest::parseRequest() {
     return;
   }
 
+  travel = travel + tokenLength;
+  
+  if(travel[0] != '\r' || travel[1] != '\n') {
+    isMalformed = true;
+    return;
+  }
+
+  travel = travel + 2;
+
+  while(travel[0] != '\r' || travel[1] != '\n') {
+    if(travel[0] == ':'  ||
+       travel[0] == ' '  ||
+       travel[0] == '\t' ||
+       travel[0] == '\r' ||
+       travel[0] == '\n') {
+      isMalformed = true;
+      return;
+    }
+
+    travel = skipTillColon(travel);
+    travel = skipTrim(travel);
+
+    if(travel[0] == '\r' ||
+       travel[0] == '\n') {
+      isMalformed = true;
+      return;
+    }
+    travel++;
+    travel = skipTillCRLF(travel);
+  }
 }
 
 
-void HttpRequest::generateResponse(int csock) {
+void HttpRequest::generateResponse() {
 
   if(isMalformed) {
-    send(csock, request400().c_str(), request400().length(), 0);
-    return;
+    string temp = request400().c_str();
+    send(csock, temp.c_str(), temp.length(), 0);
+    close(csock);
+    exit(1);
   }
 
   if(accessDenied) {
-    send(csock, request403().c_str(), request403().length(), 0);
-    return;
+    string temp = request403().c_str();
+    send(csock, temp.c_str(), temp.length(), 0);
+    close(csock);
+    exit(1);
   }
 
   if(notFound) {
-    send(csock, request404().c_str(), request404().length(), 0);
+    string temp = request404().c_str();
+    send(csock, temp.c_str(), temp.length(), 0);
     return;
   }
 
-  send(csock, request200().c_str(), request200().length(),0);
+  request200();
+
+  if(!persistent) {
+    close(csock);
+    exit(1);
+  }
 }
 
 
@@ -97,6 +139,24 @@ char * HttpRequest::skipTrim(char * arr) {
 
   return arr;
 }
+
+
+char * HttpRequest::skipTillCRLF(char * arr) {
+  while(arr[0] != '\r' || arr[1] != '\n') {
+    arr++;
+  }
+  arr += 2;
+  return arr;
+}
+
+char * HttpRequest::skipTillColon(char * arr) {
+  while(arr[0] != ':') {
+    arr++;
+  }
+  arr += 1;
+  return arr;
+}
+
 
 int HttpRequest::getTokenLength(char * arr) {
   char * travel = arr;
@@ -112,19 +172,74 @@ int HttpRequest::getTokenLength(char * arr) {
 }
 
 bool HttpRequest::parsePath(char * arr, int length) {
-  return false;
+  // TODO Add checks
+  // Check if permissions
+  // Check if found
+  // Check if directory
+  // Check file extension (to get content type)
+  // Check if directory
+  // Set content type
+
+
+  string remaining(arr, length);
+
+  path = docroot + remaining;
+
+  char buf[BUFSIZ];
+  realpath(path.c_str(), buf);
+  path = buf;
+
+  const char * dpath = docroot.c_str();
+
+  for(int i = 0; i < docroot.length(); i++) {
+    if(dpath[i] != buf[i]) {
+      accessDenied = true;
+      return false;
+    }
+  }
+
+  return true;
 }
 
-string HttpRequest::request200() {
-  string ret = "HTTP/1.1 200 Good Request\r\n";
-  ret += "Content-Type: text/html\r\n";
-  ret += "Content-Length: 14\r\n\r\n";
-  ret += "Good Request!\n";
-  return ret;
+void HttpRequest::request200() {
+  string ret = httpType + " 200 Good Request\r\n";
+
+  // TODO Change content type based on extension of path
+  //ret += "Content-Type: text/html\r\n";
+  ret += "Content-Type: " + contentType + "\r\n";
+
+  FILE * file;
+
+  if((file = fopen(path.c_str(), "rb")) == NULL) {
+    fprintf(stderr, "Couldn't open file\n");
+    cerr << "Path: " << path << endl;
+    close(csock);
+    exit(1);
+  }
+
+  fseek(file, 0L, SEEK_END);
+  size_t fileSize = ftell(file);
+  fseek(file, 0L, SEEK_SET);
+
+  ret += "Content-Length: " + to_string(fileSize) + "\r\n\r\n";
+
+  send(csock, ret.c_str(), ret.length(), 0);
+
+  size_t readSize;
+
+  unsigned char buf[BUFSIZ];
+
+  while(!feof(file)) {
+    readSize = fread(buf, 1, BUFSIZ-1, file);
+
+    send(csock, buf, readSize, 0);
+  }
+
+  // TODO Don't forget EXIT/PERSISTENCE
 }
 
 string HttpRequest::request400() {
-  string ret = "HTTP/1.1 400 Bad Request\r\n";
+  string ret = httpType + " 400 Bad Request\r\n";
   ret += "Content-Type: text/html\r\n";
   ret += "Content-Length: 13\r\n\r\n";
   ret += "Bad Request!\n";
@@ -132,7 +247,7 @@ string HttpRequest::request400() {
 }
 
 string HttpRequest::request403() {
-  string ret = "HTTP/1.1 403 Forbidden\r\n";
+  string ret = httpType + " 403 Forbidden\r\n";
   ret += "Content-Type: text/html\r\n";
   ret += "Content-Length: 11\r\n\r\n";
   ret += "Forbidden!\n";
@@ -140,7 +255,7 @@ string HttpRequest::request403() {
 }
 
 string HttpRequest::request404() {
-  string ret = "HTTP/1.1 404 Not Found\r\n";
+  string ret = httpType + " 404 Not Found\r\n";
   ret += "Content-Type: text/html\r\n";
   ret += "Content-Length: 11\r\n\r\n";
   ret += "Not Found!\n";
@@ -152,31 +267,33 @@ bool HttpRequest::isPersistent() {
 }
 
 bool HttpRequest::checkHttp(char * arr) {
-  if (!(arr[0] == 'H' || arr[0] == 'h') &&
-      (arr[1] == 'T' || arr[1] == 't') &&
-      (arr[2] == 'T' || arr[2] == 't') &&
-      (arr[3] == 'p' || arr[3] == 'p') &&
-      (arr[4] == '/') &&
-      (arr[5] == '1') &&
-      (arr[6] == '.') &&
-      (arr[7] == '1' || arr[3] == '1')) {
+  if (!((arr[0] == 'H' || arr[0] == 'h') &&
+        (arr[1] == 'T' || arr[1] == 't') &&
+        (arr[2] == 'T' || arr[2] == 't') &&
+        (arr[3] == 'P' || arr[3] == 'p') &&
+        (arr[4] == '/') &&
+        (arr[5] == '1') &&
+        (arr[6] == '.') &&
+        (arr[7] == '1' || arr[7] == '0'))) {
     return false;
   }
 
   if(arr[7] == '1') {
     persistent = true;
+    httpType = "HTTP/1.1";
   }
   else {
     persistent = false;
+    httpType = "HTTP/1.0";
   }
 
   return true;
 }
 
 bool HttpRequest::checkGet(char * arr) {
-  if(!(arr[0] == 'G' || arr[0] == 'g') &&
-     (arr[1] == 'E' || arr[1] == 'e') &&
-     (arr[2] == 'T' || arr[2] == 't')) {
+  if(!((arr[0] == 'G' || arr[0] == 'g') &&
+       (arr[1] == 'E' || arr[1] == 'e') &&
+       (arr[2] == 'T' || arr[2] == 't'))) {
     isMalformed = true;
     return false;
   }

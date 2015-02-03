@@ -46,16 +46,50 @@ string Server::getDocroot() {
 
 void Server::processRequest(int csock) {
 
+  // These booleans deal with poor design
+  bool breaker = false;
+  bool continuer = false;
+
+  string extra = "";
+
   while(true) {
-    string request = "";
-    string extra = "";
+    if(extra.length() != 0) {
+      char * extraArr = (char *) extra.c_str();
+
+      for(int i = 0; i < extra.length()-3; i++) {
+        if(checkCRLF(extraArr + i)) {
+          string newRequest(extraArr, i+4);
+          
+          HttpRequest httpRequest(newRequest, csock, this);
+          httpRequest.parseRequest();
+          httpRequest.generateResponse();
+
+          string extraRemains(extraArr, extra.length() - (i+4));
+          extra = extraRemains;
+
+          continuer = true;
+          break;
+        }
+      }
+
+      if(continuer) {
+        continue;
+      }
+    }
+
+    string request = extra;
+    extra = "";
+    breaker = false;
     
-    char buf[BUFSIZ];
+    char buffer[BUFSIZ];
+
+    char * buf = buffer;
 
     char last3[3];
+    copyLast3(last3,(char *)request.c_str(),request.length());
 
     while(true) {
-      ssize_t bytes_read = recv(csock, &buf, sizeof(buf) - 1, 0);
+      ssize_t bytes_read = recv(csock, buf, BUFSIZ - 1, 0);
 
       if(bytes_read < 0) {
         continue;
@@ -69,13 +103,24 @@ void Server::processRequest(int csock) {
 
       if((lastIndex = checkLast3(last3, buf, bytes_read)) >= 0) {
         string remaining(buf, lastIndex+1);
-        HttpRequest httpRequest(request, this);
+        request = request + remaining;
+
+        HttpRequest httpRequest(request, csock, this);
         httpRequest.parseRequest();
-        httpRequest.generateResponse(csock);
+        httpRequest.generateResponse();
+
         request = "";
         resetLast3(last3);
-        close(csock);
-        exit(0);
+
+        buf = buf + lastIndex + 1;
+        string extraRemains(buf, bytes_read - (lastIndex+1));
+        extra = extraRemains;
+        
+        breaker = true;
+      }
+
+      if(breaker) {
+        break;
       }
 
       for(int i = 0; i < bytes_read - 3; i++) {
@@ -83,13 +128,24 @@ void Server::processRequest(int csock) {
           string remaining(buf, i+4);
           request = request + remaining;
 
-          HttpRequest httpRequest(request, this);
+          HttpRequest httpRequest(request, csock, this);
           httpRequest.parseRequest();
-          httpRequest.generateResponse(csock);
-          close(csock);
-          exit(0);
+          httpRequest.generateResponse();
 
+          buf = buf + i + 4;;
+          string extraRemains(buf, bytes_read - (i+4));
+          extra = extraRemains;
+
+          breaker = true;
         }
+
+        if(breaker) {
+          break;
+        }
+      }
+
+      if(breaker) {
+        break;
       }
 
       resetLast3(last3);
@@ -136,6 +192,12 @@ bool Server::checkCRLF(char * arr) {
           arr[1] == LF &&
           arr[2] == CR &&
           arr[3] == LF);
+}
+
+void Server::copyLast3(char * arr, char * buf, int length) {
+  for(int i = length - 1, j = 2; j >= 0 && length >= 0; i--, j--) {
+    arr[j] = buf[i];
+  }
 }
 
 void Server::copyLast3(char * arr, char * buf1, int buf1len, char * buf2, int buf2len) {
