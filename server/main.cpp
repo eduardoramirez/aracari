@@ -59,6 +59,9 @@ int main(int argc, char * argv[]) {
     if(fork() == 0) {
       server.processRequest(csock);
     }
+    else {
+      close(csock);
+    }
   }
 
   close(sock);
