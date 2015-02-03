@@ -31,7 +31,7 @@ class Server {
 
     string getDocroot();
     
-    void processRequest(int csock);
+    void processRequest(int csock, unsigned int address);
 
 };
 

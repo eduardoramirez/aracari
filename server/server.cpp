@@ -44,7 +44,7 @@ string Server::getDocroot() {
   return docroot;
 }
 
-void Server::processRequest(int csock) {
+void Server::processRequest(int csock, unsigned int address) {
 
   // These booleans deal with poor design
   bool breaker = false;
@@ -60,7 +60,7 @@ void Server::processRequest(int csock) {
         if(checkCRLF(extraArr + i)) {
           string newRequest(extraArr, i+4);
           
-          HttpRequest httpRequest(newRequest, csock, this);
+          HttpRequest httpRequest(newRequest, csock, address, this);
           httpRequest.parseRequest();
           httpRequest.generateResponse();
 
@@ -134,7 +134,7 @@ void Server::processRequest(int csock) {
         string remaining(buf, lastIndex+1);
         request = request + remaining;
 
-        HttpRequest httpRequest(request, csock, this);
+        HttpRequest httpRequest(request, csock, address, this);
         httpRequest.parseRequest();
         httpRequest.generateResponse();
 
@@ -157,7 +157,7 @@ void Server::processRequest(int csock) {
           string remaining(buf, i+4);
           request = request + remaining;
 
-          HttpRequest httpRequest(request, csock, this);
+          HttpRequest httpRequest(request, csock, address, this);
           httpRequest.parseRequest();
           httpRequest.generateResponse();
 

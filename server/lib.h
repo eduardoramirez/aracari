@@ -1,6 +1,8 @@
 #ifndef LIB
 #define LIB
 
+#define INVALID -1
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -19,6 +21,8 @@
 
 #include <iostream>
 #include <csignal>
+
+#include <netdb.h>
 
 using namespace std;
 

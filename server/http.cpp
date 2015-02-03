@@ -1,6 +1,7 @@
 #include "http.h"
+#include "htaccess.h"
 
-HttpRequest::HttpRequest(string request, int csock, Server * server) {
+HttpRequest::HttpRequest(string request, int csock, unsigned int address, Server * server) {
   //fprintf(stderr, "Request received. Printing it out.\n");
   //fprintf(stderr, "%s\n", request.c_str());
 
@@ -8,6 +9,8 @@ HttpRequest::HttpRequest(string request, int csock, Server * server) {
   this->server = server;
 
   this->docroot = server->getDocroot();
+
+  this->address = address;
   
   path = "";
   path = path + docroot;
@@ -215,6 +218,18 @@ bool HttpRequest::parsePath(char * arr, int length) {
 
   int permissionCounter = 0;
 
+  string htStr = path + "/.htaccess";
+
+  struct stat statHT;
+
+  if(stat(htStr.c_str(), &statHT) == 0) {
+    HTAccess htaccess(path, address);
+    if(!htaccess.allow()) {
+      accessDenied = true;
+      return false;
+    }
+  }
+
   while(travel[0] != '\0') {
     travel = skipSlash(travel);
     int pathTokenLength = getPathTokenLength(travel);
@@ -246,7 +261,6 @@ bool HttpRequest::parsePath(char * arr, int length) {
     struct stat statBuf;
     
     if(stat(tempBuf, &statBuf) != 0) {
-      perror("WHAT");
       notFound = true;
       fprintf(stderr, "%s\n", tempBuf);
       return false;;
@@ -261,6 +275,16 @@ bool HttpRequest::parsePath(char * arr, int length) {
       if(!(statBuf.st_mode & S_IXOTH)) {
         accessDenied = true;
         return false;
+      }
+
+      htStr = path + "/.htaccess";
+
+      if(stat(htStr.c_str(), &statHT) == 0) {
+        HTAccess htaccess2(path, address);
+        if(!htaccess2.allow()) {
+          accessDenied = true;
+          return false;
+        }
       }
     }
     else {
@@ -331,6 +355,8 @@ void HttpRequest::request200() {
 
     send(csock, buf, readSize, 0);
   }
+
+  fclose(file);
 }
 
 string HttpRequest::request400() {

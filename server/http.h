@@ -20,6 +20,7 @@ class HttpRequest {
     bool persistent;
 
     int csock;
+    unsigned int address;
 
     Server * server;
 
@@ -46,7 +47,7 @@ class HttpRequest {
     void setContentType(string str);
 
   public:
-    HttpRequest(string request, int csock, Server * server);
+    HttpRequest(string request, int csock, unsigned int address, Server * server);
     ~HttpRequest();
 
     void parseRequest();

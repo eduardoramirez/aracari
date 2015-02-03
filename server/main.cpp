@@ -1,4 +1,5 @@
 #include "server.h"
+#include <arpa/inet.h>
 
 
 
@@ -59,7 +60,7 @@ int main(int argc, char * argv[]) {
     }
 
     if(fork() == 0) {
-      server.processRequest(csock);
+      server.processRequest(csock, client_address.sin_addr.s_addr);
     }
     else {
       close(csock);
