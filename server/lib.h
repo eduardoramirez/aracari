@@ -24,6 +24,8 @@
 
 #include <netdb.h>
 
+#include <cstring>
+
 using namespace std;
 
 bool is_file(char * path);

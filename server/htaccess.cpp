@@ -26,7 +26,7 @@ bool HTAccess::allow() {
 
   char buf[fileSize+1];
 
-  for(int i = 0; i < fileSize+1; i++) {
+  for(unsigned int i = 0; i < fileSize+1; i++) {
     buf[i] = 0;
   }
 
