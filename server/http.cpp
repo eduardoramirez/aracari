@@ -11,8 +11,8 @@ HttpRequest::HttpRequest(string request, int csock, Server * server) {
 
   response = "";
   path = "";
-  contentType = "";
-  httpType = "";
+  contentType = "text/html";
+  httpType = "HTTP/1.1";
 
   beenParsed = false;
   isMalformed = false;
@@ -127,7 +127,7 @@ void HttpRequest::generateResponse() {
 
   if(!persistent) {
     close(csock);
-    exit(1);
+    exit(0);
   }
 }
 
@@ -234,13 +234,11 @@ void HttpRequest::request200() {
 
     send(csock, buf, readSize, 0);
   }
-
-  // TODO Don't forget EXIT/PERSISTENCE
 }
 
 string HttpRequest::request400() {
   string ret = httpType + " 400 Bad Request\r\n";
-  ret += "Content-Type: text/html\r\n";
+  ret += "Content-Type: " + contentType + "\r\n";
   ret += "Content-Length: 13\r\n\r\n";
   ret += "Bad Request!\n";
   return ret;
@@ -248,7 +246,7 @@ string HttpRequest::request400() {
 
 string HttpRequest::request403() {
   string ret = httpType + " 403 Forbidden\r\n";
-  ret += "Content-Type: text/html\r\n";
+  ret += "Content-Type: " + contentType + "\r\n";
   ret += "Content-Length: 11\r\n\r\n";
   ret += "Forbidden!\n";
   return ret;
@@ -256,7 +254,7 @@ string HttpRequest::request403() {
 
 string HttpRequest::request404() {
   string ret = httpType + " 404 Not Found\r\n";
-  ret += "Content-Type: text/html\r\n";
+  ret += "Content-Type: " + contentType + "\r\n";
   ret += "Content-Length: 11\r\n\r\n";
   ret += "Not Found!\n";
   return ret;

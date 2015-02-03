@@ -49,6 +49,7 @@ void Server::processRequest(int csock) {
   // These booleans deal with poor design
   bool breaker = false;
   bool continuer = false;
+  bool once = false;
 
   string extra = "";
 
@@ -77,9 +78,12 @@ void Server::processRequest(int csock) {
       }
     }
 
+    fprintf(stderr, "We got here\n");
+
     string request = extra;
     extra = "";
     breaker = false;
+    continuer = false;
     
     char buffer[BUFSIZ];
 
@@ -88,7 +92,30 @@ void Server::processRequest(int csock) {
     char last3[3];
     copyLast3(last3,(char *)request.c_str(),request.length());
 
+    fd_set rfds;
+
+    FD_ZERO(&rfds);
+    FD_SET(csock, &rfds);
+
+    struct timeval tv;
+    tv.tv_sec = 10;
+    tv.tv_usec = 0;
+
+    int retval = select(csock+1, &rfds, NULL, NULL, &tv);
+
+    if (retval == -1) {
+      perror("select()");
+      exit(1);
+    }
+    else if(retval) {
+    }
+    else {
+      close(csock);
+      exit(1);
+    }
+
     while(true) {
+      once = true;
       ssize_t bytes_read = recv(csock, buf, BUFSIZ - 1, 0);
 
       if(bytes_read < 0) {
@@ -96,7 +123,8 @@ void Server::processRequest(int csock) {
       }
 
       if(bytes_read == 0) {
-        // TODO Deal with closing connection
+        close(csock);
+        exit(0);
       }
 
       int lastIndex;
@@ -195,7 +223,7 @@ bool Server::checkCRLF(char * arr) {
 }
 
 void Server::copyLast3(char * arr, char * buf, int length) {
-  for(int i = length - 1, j = 2; j >= 0 && length >= 0; i--, j--) {
+  for(int i = length - 1, j = 2; j >= 0 && i >= 0; i--, j--) {
     arr[j] = buf[i];
   }
 }
@@ -213,7 +241,7 @@ void Server::copyLast3(char * arr, char * buf1, int buf1len, char * buf2, int bu
     buf[i] = buf2[j];
   }
 
-  for(int i = length - 1, j = 2; j >= 0 && length >= 0; i--, j--) {
+  for(int i = length - 1, j = 2; j >= 0 && i >= 0; i--, j--) {
     arr[j] = buf[i];
   }
 }
