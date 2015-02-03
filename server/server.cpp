@@ -49,7 +49,6 @@ void Server::processRequest(int csock) {
   // These booleans deal with poor design
   bool breaker = false;
   bool continuer = false;
-  bool once = false;
 
   string extra = "";
 
@@ -57,7 +56,7 @@ void Server::processRequest(int csock) {
     if(extra.length() != 0) {
       char * extraArr = (char *) extra.c_str();
 
-      for(int i = 0; i < extra.length()-3; i++) {
+      for(unsigned int i = 0; i < extra.length()-3; i++) {
         if(checkCRLF(extraArr + i)) {
           string newRequest(extraArr, i+4);
           
@@ -112,7 +111,6 @@ void Server::processRequest(int csock) {
     }
 
     while(true) {
-      once = true;
       ssize_t bytes_read = recv(csock, buf, BUFSIZ - 1, 0);
 
       if(bytes_read < 0) {

@@ -288,7 +288,7 @@ bool HttpRequest::parsePath(char * arr, int length) {
 
   const char * dpath = docroot.c_str();
 
-  for(int i = 0; i < docroot.length(); i++) {
+  for(unsigned int i = 0; i < docroot.length(); i++) {
     if(dpath[i] != buf[i]) {
       accessDenied = true;
       return false;

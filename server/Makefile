@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS  = -g -Wall
+CFLAGS  = -g -std=c++11 -Wall
 
 default: httpd
 
