@@ -197,6 +197,10 @@ bool HttpRequest::parsePath(char * arr, int length) {
 
   char buf[BUFSIZ];
 
+  for(int i = 0; i < BUFSIZ; i++) {
+    buf[i] = 0;
+  }
+
   char * travel = buf;
 
   for(int i = 0; i < length; i++) {
