@@ -237,6 +237,10 @@ bool HttpRequest::parsePath(char * arr, int length) {
     
     char tempBuf[BUFSIZ];
 
+    for(int i = 0; i < BUFSIZ; i++) {
+      tempBuf[i] = 0;
+    }
+
     realpath(path.c_str(), tempBuf);
 
     struct stat statBuf;
@@ -290,15 +294,6 @@ bool HttpRequest::parsePath(char * arr, int length) {
 
   setContentType(path);
 
-  const char * dpath = docroot.c_str();
-
-  for(unsigned int i = 0; i < docroot.length(); i++) {
-    if(dpath[i] != buf[i]) {
-      accessDenied = true;
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -326,6 +321,10 @@ void HttpRequest::request200() {
   size_t readSize;
 
   unsigned char buf[BUFSIZ];
+
+  for(int i = 0; i < BUFSIZ; i++) {
+    buf[i] = 0;
+  }
 
   while(!feof(file)) {
     readSize = fread(buf, 1, BUFSIZ-1, file);
@@ -437,7 +436,7 @@ void HttpRequest::setContentType(string str) {
      (arr[-2] == 'n' || arr[-2] == 'N') &&
      (arr[-3] == 'p' || arr[-3] == 'P') &&
      (arr[-4] == '.')) {
-    contentType = "image/jpeg";
+    contentType = "image/png";
   }
 
   if(str.length() < 5) {

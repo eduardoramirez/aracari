@@ -83,10 +83,17 @@ void Server::processRequest(int csock) {
     continuer = false;
     
     char buffer[BUFSIZ];
+    
+    for(int i = 0; i < BUFSIZ; i++) {
+      buffer[i] = 0;
+    }
 
     char * buf = buffer;
 
     char last3[3];
+    for(int i = 0; i < 3; i++) {
+      last3[i] = 0;
+    }
     copyLast3(last3,(char *)request.c_str(),request.length());
 
     fd_set rfds;
@@ -179,32 +186,6 @@ void Server::processRequest(int csock) {
   }
 
   shut(csock, sock);
-
-
-  /*
-  char buf[BUFSIZ];
-  ssize_t bytes_read;
-
-  do {
-    bytes_read = recv(csock, &buf, sizeof(buf) - 1, 0);
-    if(bytes_read < 0) {
-      perror("recv failed");
-      exit(1);
-    }
-
-    ssize_t bytes_sent = send(csock, &buf, bytes_read, 0);
-    if(bytes_sent < 0) {
-      perror("send failed");
-      exit(1);
-    } else if (bytes_sent < bytes_read) {
-      perror("couldn't send everything");
-      exit(1);
-    }
-
-  } while(bytes_read > 0);
-
-  close(csock);
-  exit(0);*/
 }
 
 
